@@ -32,22 +32,33 @@ import static com.almasb.fxgl.dsl.FXGL.*;
 
 public class GameApp extends GameApplication {
 
+    // ==================== LAUKAI ====================
+
+    // Zaidejas ir zemelapis
     private Entity player;
     private int[][] map;
+
+    // Animacija: kanalai vaiksciojimui ir stovejimui kiekviena kryptimi
     private AnimatedTexture texture;
     private AnimationChannel animDown, animLeft, animRight, animUp;
     private AnimationChannel idleDown, idleLeft, idleRight, idleUp;
     private AnimationChannel idleChannel;
     private boolean moving;
+
+    // Redaktorius (F1): rezimas, plyteliu palete, pasirinkta plytele
     private boolean editMode = false;
     private final int[] palette = { 817, 1138, 719, 974, 107, 413, 11, 1127, 1433 };
     private int selectedGid = 817;
     private Group paletteUI;
     private Rectangle selectionBox;
     private String status = "";
+
+    // Zemelapio piesimas i viena Canvas
     private Canvas mapCanvas;
     private GraphicsContext gc;
     private Image tilesetImage;
+
+    // Monetos, HUD ir lygiu eiga
     private List<Entity> coins = new ArrayList<>();
     private int coinsCollected = 0;
     private boolean levelComplete = false;
@@ -56,6 +67,9 @@ public class GameApp extends GameApplication {
     private int totalCoins = 0;
     private static final int MAX_LEVELS = 3;
 
+    // ==================== PALEIDIMAS IR LYGIU UZKROVIMAS ====================
+
+    // Lango dydis ir pavadinimas
     @Override
     protected void initSettings(GameSettings settings) {
         settings.setWidth(800);
@@ -63,6 +77,7 @@ public class GameApp extends GameApplication {
         settings.setTitle("zaidimas");
     }
 
+    // Animacijos kanalai sukuriami viena karta, po to uzkraunamas 1 lygis
     @Override
     protected void initGame() {
         Image sheet = image("player_sheet.png");
@@ -80,6 +95,8 @@ public class GameApp extends GameApplication {
         loadLevel(1);
     }
 
+    // Uzkrauna lygi: isvalo pasauli, nuskaito CSV, piesia zemelapi,
+    // sukuria zaideja bei monetas ir pririsa kamera
     private void loadLevel(int n) {
         currentLevel = n;
         levelComplete = false;
@@ -108,6 +125,9 @@ public class GameApp extends GameApplication {
         getGameScene().getViewport().bindToEntity(player, 400, 300);
     }
 
+    // ==================== VARTOTOJO SASAJA (HUD IR PALETE) ====================
+
+    // HUD tekstas virsuje ir plyteliu palete apacioje (matoma tik redaguojant)
     @Override
     protected void initUI() {
         hud = new Text();
@@ -144,6 +164,8 @@ public class GameApp extends GameApplication {
         addUINode(paletteUI);
     }
 
+    // GID -> iskirpta 16x16 plytele is tileset paveiksliuko.
+    // Stulpelis = index % 51, eilute = index / 51 (lape 51 plyteles per eilute)
     private Texture tileTexture(int gid) {
         int index = gid - 1;
         int sx = (index % 51) * 16;
@@ -153,6 +175,7 @@ public class GameApp extends GameApplication {
                 .subTexture(new Rectangle2D(sx, sy, 16, 16));
     }
 
+    // Pasirenka plytele paletes paspaudimu ir perkelia balta remeli
     private void selectTile(int gid) {
         selectedGid = gid;
 
@@ -163,6 +186,9 @@ public class GameApp extends GameApplication {
         }
     }
 
+    // ==================== PAGRINDINIS CIKLAS (KAS KADRA) ====================
+
+    // Atnaujina HUD, renka monetas, tikrina laimejima ir stovejimo animacija
     @Override
     protected void onUpdate(double tpf) {
         hud.setText("Level " + currentLevel
@@ -197,6 +223,10 @@ public class GameApp extends GameApplication {
         moving = false;
     }
 
+    // ==================== VALDYMAS ====================
+
+    // WASD - judejimas (redaguojant - kameros stumimas),
+    // F1 - redaktorius, F5 - issaugoti, F9 - perkrauti, peles kairys - piesti
     @Override
     protected void initInput() {
         onKey(KeyCode.W, () -> tryMove(0, -2));
@@ -219,6 +249,9 @@ public class GameApp extends GameApplication {
         });
     }
 
+    // ==================== REDAKTORIUS: PIESIMAS IR ZEMELAPIO BRAIZYMAS ====================
+
+    // Nupiesia plytele ir tuoj pat pakeicia kliuciu masyva (map)
     private void paintTile(int col, int row) {
         if (col < 0 || row < 0 || row >= map.length || col >= map[0].length) {
             return;
@@ -228,6 +261,7 @@ public class GameApp extends GameApplication {
         drawTile(col, row);
     }
 
+    // Nupiesia viena langeli i Canvas
     private void drawTile(int col, int row) {
         int gid = map[row][col];
         if (gid <= 0) return;
@@ -239,6 +273,7 @@ public class GameApp extends GameApplication {
         gc.drawImage(tilesetImage, sx, sy, 16, 16, col * 16, row * 16, 16, 16);
     }
 
+    // Nupiesia visa zemelapi i viena Canvas (zIndex -100 - fonas)
     private void renderMap() {
         int w = map[0].length * 16;
         int h = map.length * 16;
@@ -259,10 +294,14 @@ public class GameApp extends GameApplication {
                 .buildAndAttach();
     }
 
+    // ==================== ISSAUGOJIMAS I DISKA ====================
+
+    // Failai rasomi i levels/ salia projekto
     private Path levelPath(String fileName) {
         return Paths.get("levels", fileName);
     }
 
+    // Issaugo zemelapi kaip CSV (-1, kad liktu Tiled formatas)
     private void saveMap(String fileName) {
         StringBuilder sb = new StringBuilder();
 
@@ -285,6 +324,7 @@ public class GameApp extends GameApplication {
         }
     }
 
+    // Ijungia/isjungia redaktoriu: atrisa arba vel pririsa kamera
     private void toggleEditMode() {
         editMode = !editMode;
 
@@ -297,6 +337,9 @@ public class GameApp extends GameApplication {
         }
     }
 
+    // ==================== JUDEJIMAS, ANIMACIJA IR SUSIDURIMAI ====================
+
+    // Bando pajudeti: pasuka veikeja, patikrina 4 kampus ir tik tada juda
     private void tryMove(double dx, double dy) {
         if (editMode) {
             Viewport vp = getGameScene().getViewport();
@@ -323,6 +366,7 @@ public class GameApp extends GameApplication {
         }
     }
 
+    // Sukuria moneta pagal langelio koordinates
     private void spawnCoin(int col, int row) {
         Entity coin = entityBuilder()
                 .at(col * 16, row * 16)
@@ -332,12 +376,16 @@ public class GameApp extends GameApplication {
         coins.add(coin);
     }
 
+    // Perjungia animacija tik jei kryptis pasikeite (kitaip strigtu 0 kadre)
     private void setAnim(AnimationChannel channel) {
         if (texture.getAnimationChannel() != channel) {
             texture.loopAnimationChannel(channel);
         }
     }
 
+    // ==================== FAILU SKAITYMAS ====================
+
+    // Nuskaito CSV (pirmiausia is disko, jei nera - is resursu) ir prideda +1 -> GID
     private int[][] loadMap(String fileName) {
         List<String> lines;
         Path p = levelPath(fileName);
@@ -370,6 +418,7 @@ public class GameApp extends GameApplication {
         return rows.toArray(new int[0][]);
     }
 
+    // Nuskaito zaidejo starta ir monetu vietas: tipas,stulpelis,eilute
     private void loadItems(String fileName) {
         var lines = getAssetLoader().loadText("levels/" + fileName);
 
@@ -389,6 +438,9 @@ public class GameApp extends GameApplication {
         }
     }
 
+    // ==================== KLIUTYS ====================
+
+    // Kurios plyteles nepraleidzia zaidejo
     private boolean isSolid(int gid) {
         // grass biome (level 1): tree, rock, water
         return gid == 719 || gid == 974 || gid == 1138
@@ -398,6 +450,7 @@ public class GameApp extends GameApplication {
                 || gid == 1127 || gid == 1433;
     }
 
+    // Pikseliai -> langeliai (/16) + zemelapio ribu patikra
     private boolean canMoveTo(double x, double y) {
         if (x < 0 || y < 0) {
             return false;
@@ -412,6 +465,8 @@ public class GameApp extends GameApplication {
 
         return !isSolid(map[row][col]);
     }
+
+    // ==================== STARTAS ====================
 
     public static void main(String[] args) {
         launch(args);
