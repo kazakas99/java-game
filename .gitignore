@@ -1,0 +1,19 @@
+# Maven build output
+target/
+
+# IntelliJ
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# FXGL runtime output
+logs/
+system/
+
+# Levels written by the in-game editor at runtime (F5), at the repo root only.
+# These shadow the bundled levels in src/main/resources, so keeping them out of
+# the repo means a fresh clone always starts from the shipped maps.
+# Leading slash matters: a bare "levels/" would also exclude
+# src/main/resources/assets/levels/ and .../assets/text/levels/.
+/levels/
