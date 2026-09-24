@@ -32,20 +32,16 @@ import static com.almasb.fxgl.dsl.FXGL.*;
 
 public class GameApp extends GameApplication {
 
-    // ==================== LAUKAI ====================
-
     // Zaidejas ir zemelapis
     private Entity player;
     private int[][] map;
 
-    // Animacija: kanalai vaiksciojimui ir stovejimui kiekviena kryptimi
     private AnimatedTexture texture;
     private AnimationChannel animDown, animLeft, animRight, animUp;
     private AnimationChannel idleDown, idleLeft, idleRight, idleUp;
     private AnimationChannel idleChannel;
     private boolean moving;
 
-    // Redaktorius (F1): rezimas, plyteliu palete, pasirinkta plytele
     private boolean editMode = false;
     private final int[] palette = { 817, 1138, 719, 974, 107, 413, 11, 1127, 1433 };
     private int selectedGid = 817;
@@ -53,7 +49,7 @@ public class GameApp extends GameApplication {
     private Rectangle selectionBox;
     private String status = "";
 
-    // Zemelapio piesimas i viena Canvas
+    // Zemelapio piesimas
     private Canvas mapCanvas;
     private GraphicsContext gc;
     private Image tilesetImage;
@@ -66,8 +62,6 @@ public class GameApp extends GameApplication {
     private int currentLevel = 1;
     private int totalCoins = 0;
     private static final int MAX_LEVELS = 3;
-
-    // ==================== PALEIDIMAS IR LYGIU UZKROVIMAS ====================
 
     // Lango dydis ir pavadinimas
     @Override
@@ -124,8 +118,6 @@ public class GameApp extends GameApplication {
         getGameScene().getViewport().setBounds(0, 0, map[0].length * 16, map.length * 16);
         getGameScene().getViewport().bindToEntity(player, 400, 300);
     }
-
-    // ==================== VARTOTOJO SASAJA (HUD IR PALETE) ====================
 
     // HUD tekstas virsuje ir plyteliu palete apacioje (matoma tik redaguojant)
     @Override
@@ -186,8 +178,6 @@ public class GameApp extends GameApplication {
         }
     }
 
-    // ==================== PAGRINDINIS CIKLAS (KAS KADRA) ====================
-
     // Atnaujina HUD, renka monetas, tikrina laimejima ir stovejimo animacija
     @Override
     protected void onUpdate(double tpf) {
@@ -223,8 +213,6 @@ public class GameApp extends GameApplication {
         moving = false;
     }
 
-    // ==================== VALDYMAS ====================
-
     // WASD - judejimas (redaguojant - kameros stumimas),
     // F1 - redaktorius, F5 - issaugoti, F9 - perkrauti, peles kairys - piesti
     @Override
@@ -248,8 +236,6 @@ public class GameApp extends GameApplication {
             paintTile((int) (world.getX() / 16), (int) (world.getY() / 16));
         });
     }
-
-    // ==================== REDAKTORIUS: PIESIMAS IR ZEMELAPIO BRAIZYMAS ====================
 
     // Nupiesia plytele ir tuoj pat pakeicia kliuciu masyva (map)
     private void paintTile(int col, int row) {
@@ -294,7 +280,6 @@ public class GameApp extends GameApplication {
                 .buildAndAttach();
     }
 
-    // ==================== ISSAUGOJIMAS I DISKA ====================
 
     // Failai rasomi i levels/ salia projekto
     private Path levelPath(String fileName) {
@@ -336,8 +321,6 @@ public class GameApp extends GameApplication {
             getGameScene().getViewport().bindToEntity(player, 400, 300);
         }
     }
-
-    // ==================== JUDEJIMAS, ANIMACIJA IR SUSIDURIMAI ====================
 
     // Bando pajudeti: pasuka veikeja, patikrina 4 kampus ir tik tada juda
     private void tryMove(double dx, double dy) {
@@ -383,7 +366,6 @@ public class GameApp extends GameApplication {
         }
     }
 
-    // ==================== FAILU SKAITYMAS ====================
 
     // Nuskaito CSV (pirmiausia is disko, jei nera - is resursu) ir prideda +1 -> GID
     private int[][] loadMap(String fileName) {
@@ -438,8 +420,6 @@ public class GameApp extends GameApplication {
         }
     }
 
-    // ==================== KLIUTYS ====================
-
     // Kurios plyteles nepraleidzia zaidejo
     private boolean isSolid(int gid) {
         // grass biome (level 1): tree, rock, water
@@ -465,8 +445,6 @@ public class GameApp extends GameApplication {
 
         return !isSolid(map[row][col]);
     }
-
-    // ==================== STARTAS ====================
 
     public static void main(String[] args) {
         launch(args);
