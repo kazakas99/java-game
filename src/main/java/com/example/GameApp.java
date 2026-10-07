@@ -54,7 +54,7 @@ public class GameApp extends GameApplication {
     private GraphicsContext gc;
     private Image tilesetImage;
 
-    // Monetos, HUD ir lygiu eiga
+    // Monetos, HUD ir lygiai
     private List<Entity> coins = new ArrayList<>();
     private int coinsCollected = 0;
     private boolean levelComplete = false;
@@ -62,6 +62,8 @@ public class GameApp extends GameApplication {
     private int currentLevel = 1;
     private int totalCoins = 0;
     private static final int MAX_LEVELS = 3;
+    private static final double SPEED = 2.5;       // zaidejo greitis pikseliais per kadra
+    private static final double PAN_SPEED = 6;   // kameros stumimo greitis redaguojant
 
     // Lango dydis ir pavadinimas
     @Override
@@ -76,10 +78,10 @@ public class GameApp extends GameApplication {
     protected void initGame() {
         Image sheet = image("player_sheet.png");
 
-        animDown  = new AnimationChannel(sheet, 4, 16, 16, Duration.seconds(0.5), 0, 3);
-        animLeft  = new AnimationChannel(sheet, 4, 16, 16, Duration.seconds(0.5), 4, 7);
-        animRight = new AnimationChannel(sheet, 4, 16, 16, Duration.seconds(0.5), 8, 11);
-        animUp    = new AnimationChannel(sheet, 4, 16, 16, Duration.seconds(0.5), 12, 15);
+        animDown  = new AnimationChannel(sheet, 4, 16, 16, Duration.seconds(0.45), 0, 3);
+        animLeft  = new AnimationChannel(sheet, 4, 16, 16, Duration.seconds(0.45), 4, 7);
+        animRight = new AnimationChannel(sheet, 4, 16, 16, Duration.seconds(0.45), 8, 11);
+        animUp    = new AnimationChannel(sheet, 4, 16, 16, Duration.seconds(0.45), 12, 15);
 
         idleDown  = new AnimationChannel(sheet, 4, 16, 16, Duration.seconds(1), 0, 0);
         idleLeft  = new AnimationChannel(sheet, 4, 16, 16, Duration.seconds(1), 4, 4);
@@ -217,10 +219,10 @@ public class GameApp extends GameApplication {
     // F1 - redaktorius, F5 - issaugoti, F9 - perkrauti, peles kairys - piesti
     @Override
     protected void initInput() {
-        onKey(KeyCode.W, () -> tryMove(0, -2));
-        onKey(KeyCode.S, () -> tryMove(0, 2));
-        onKey(KeyCode.A, () -> tryMove(-2, 0));
-        onKey(KeyCode.D, () -> tryMove(2, 0));
+        onKey(KeyCode.W, () -> tryMove(0, -SPEED));
+        onKey(KeyCode.S, () -> tryMove(0, SPEED));
+        onKey(KeyCode.A, () -> tryMove(-SPEED, 0));
+        onKey(KeyCode.D, () -> tryMove(SPEED, 0));
 
         onKeyDown(KeyCode.F1, () -> toggleEditMode());
         onKeyDown(KeyCode.F5, () -> saveMap("level" + currentLevel + ".csv"));
@@ -247,7 +249,7 @@ public class GameApp extends GameApplication {
         drawTile(col, row);
     }
 
-    // Nupiesia viena langeli i Canvas
+    // Nupiesia viena langeli
     private void drawTile(int col, int row) {
         int gid = map[row][col];
         if (gid <= 0) return;
@@ -259,7 +261,7 @@ public class GameApp extends GameApplication {
         gc.drawImage(tilesetImage, sx, sy, 16, 16, col * 16, row * 16, 16, 16);
     }
 
-    // Nupiesia visa zemelapi i viena Canvas (zIndex -100 - fonas)
+    // Nupiesia visa zemelapi
     private void renderMap() {
         int w = map[0].length * 16;
         int h = map.length * 16;
@@ -286,7 +288,7 @@ public class GameApp extends GameApplication {
         return Paths.get("levels", fileName);
     }
 
-    // Issaugo zemelapi kaip CSV (-1, kad liktu Tiled formatas)
+    // Issaugo zemelapi kaip CSV
     private void saveMap(String fileName) {
         StringBuilder sb = new StringBuilder();
 
@@ -326,8 +328,8 @@ public class GameApp extends GameApplication {
     private void tryMove(double dx, double dy) {
         if (editMode) {
             Viewport vp = getGameScene().getViewport();
-            vp.setX(vp.getX() + dx * 3);
-            vp.setY(vp.getY() + dy * 3);
+            vp.setX(vp.getX() + Math.signum(dx) * PAN_SPEED);
+            vp.setY(vp.getY() + Math.signum(dy) * PAN_SPEED);
             return;
         }
 
@@ -430,7 +432,6 @@ public class GameApp extends GameApplication {
                 || gid == 1127 || gid == 1433;
     }
 
-    // Pikseliai -> langeliai (/16) + zemelapio ribu patikra
     private boolean canMoveTo(double x, double y) {
         if (x < 0 || y < 0) {
             return false;
